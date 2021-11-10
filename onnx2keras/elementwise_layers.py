@@ -72,7 +72,6 @@ def convert_elementwise_add(node, params, layers, lambda_func, node_name, keras_
 
         def target_layer(x):
             import tensorflow as tf
-            print(x[0], x[1])
             layer = tf.add(
                 x[0],
                 x[1]
@@ -115,16 +114,13 @@ def convert_elementwise_mul(node, params, layers, lambda_func, node_name, keras_
 
         def target_layer(x):
             import tensorflow as tf
-            layer = tf.multiply(
-                x[0],
-                x[1]
-            )
+            layer = x[0] * x[1]
             return layer
 
         lambda_layer = keras.layers.Lambda(target_layer, name=keras_name)
         layers[node_name] = lambda_layer([input_0, input_1])
         lambda_func[keras_name] = target_layer
-
+    # logger.warning(f'Mul Keras layers.\n=====>{layers[node_name]} \nparam:{params} \ninputs:{input_0}x{input_1}')
 
 def convert_elementwise_sub(node, params, layers, lambda_func, node_name, keras_name):
     """

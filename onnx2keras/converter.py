@@ -236,7 +236,15 @@ def onnx_to_keras(onnx_model, input_names,
             if layer['config'] and 'data_format' in layer['config']:
                 layer['config']['data_format'] = 'channels_last'
             if layer['config'] and 'axis' in layer['config']:
-                layer['config']['axis'] = 3
+                ### concat on [[1,d0,n],[1,d1,n],[1,d2,n]]###
+                shape_len =  len(layers[layer['config']['name']].shape)
+                if shape_len == 3:
+                    pass
+                elif shape_len == 4 and layer['config']['axis'] == 1:
+                    layer['config']['axis'] = 3
+                else:
+                    layer['config']['axis'] = 3
+                    logging.warning("Unexpected reshape dimesion Set default axis to 3")
             if layer['config'] and 'dims' in layer['config']:
                 #layer['config']['dims'] = layer['config']['dims'][1], layer['config']['dims'][0], layer['config']['dims'][3], layer['config']['dims'][2]
                 layer['config']['dims'] = layer['config']['dims'][1], layer['config']['dims'][2], layer['config']['dims'][0]

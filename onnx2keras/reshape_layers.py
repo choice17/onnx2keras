@@ -129,6 +129,8 @@ def convert_concat(node, params, layers, lambda_func, node_name, keras_name):
                 lambda_func["%s_CHW" % keras_name] = target_layer
         else:
             layers[node_name] = layer_input[0]
+    #logger.trace(f'Concat Keras layers.\n=====>{layers[node_name]} \nparam:{params} \ninputs:{layer_input}')
+            
 
 
 def convert_reshape(node, params, layers, lambda_func, node_name, keras_name):

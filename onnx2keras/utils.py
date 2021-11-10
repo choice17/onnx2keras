@@ -39,6 +39,8 @@ def ensure_tf_type(obj, fake_input_layer=None, name=None):
             import tensorflow as tf
             if not isinstance(inp, (np.ndarray, np.generic)):
                 inp = np.array(inp, dtype=dtype)
+            if inp.shape == ():
+                inp = np.array([inp],dtype=inp.dtype)
             return tf.constant(inp, dtype=inp.dtype)
 
         lambda_layer = keras.layers.Lambda(target_layer, name=name)
