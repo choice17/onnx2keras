@@ -172,14 +172,18 @@ def onnx_to_keras(onnx_model, input_names,
             logger.debug('... found all, continue')
 
         keras.backend.set_image_data_format('channels_first')
-        AVAILABLE_CONVERTERS[node_type](
-            node,
-            node_params,
-            layers,
-            lambda_funcs,
-            node_name,
-            keras_names
-        )
+        try:
+            AVAILABLE_CONVERTERS[node_type](
+                node,
+                node_params,
+                layers,
+                lambda_funcs,
+                node_name,
+                keras_names
+            )
+        except ValueError as e:
+            raise ValueError(e)
+
         if isinstance(keras_names, list):
             keras_names = keras_names[0]
 
@@ -199,29 +203,43 @@ def onnx_to_keras(onnx_model, input_names,
     if change_ordering:
         import numpy as np
         conf = model.get_config()
-
         for layer in conf['layers']:
             if layer['config'] and 'batch_input_shape' in layer['config']:
                 layer['config']['batch_input_shape'] = \
                     tuple(np.reshape(np.array(
                         [
-                            [None] +
+                            [1] +
                             list(layer['config']['batch_input_shape'][2:][:]) +
                             [layer['config']['batch_input_shape'][1]]
                         ]), -1
                     ))
             if layer['config'] and 'target_shape' in layer['config']:
                 if len(list(layer['config']['target_shape'][1:][:])) > 0:
-                    layer['config']['target_shape'] = \
-                        tuple(np.reshape(np.array(
-                                list(layer['config']['target_shape'][1:]) +
-                                [layer['config']['target_shape'][0]]
-                            ), -1),)
+                    #layer['config']['target_shape'] = \
+                    #    tuple(np.reshape(np.array(
+                    #            list(layer['config']['target_shape'][-2:]) +
+                    #            list(layer['config']['target_shape'][:-2])
+                    #        ), -1),)
+                    if layer['config']['target_shape'][0] == -1:
+                        layer['config']['target_shape'] = \
+                            tuple(np.reshape(np.array(
+                                    list(layer['config']['target_shape'][-2:]) +
+                                    list(layer['config']['target_shape'][:-2])
+                                ), -1),)
+                    else:
+                        layer['config']['target_shape'] = \
+                            tuple(np.reshape(np.array(
+                                    list(layer['config']['target_shape'][-1:]) +
+                                    list(layer['config']['target_shape'][:-1])
+                                ), -1),)
 
             if layer['config'] and 'data_format' in layer['config']:
                 layer['config']['data_format'] = 'channels_last'
             if layer['config'] and 'axis' in layer['config']:
                 layer['config']['axis'] = 3
+            if layer['config'] and 'dims' in layer['config']:
+                #layer['config']['dims'] = layer['config']['dims'][1], layer['config']['dims'][0], layer['config']['dims'][3], layer['config']['dims'][2]
+                layer['config']['dims'] = layer['config']['dims'][1], layer['config']['dims'][2], layer['config']['dims'][0]
 
         for layer in conf['layers']:
             if 'function' in layer['config'] and layer['config']['function'][1] is not None:

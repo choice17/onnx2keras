@@ -26,6 +26,8 @@ def convert_transpose(node, params, layers, lambda_func, node_name, keras_name):
         else:
             raise NotImplementedError('Can\'t modify this type of data')
     else:
+        if len(params['perm']) == 5:
+            params['perm'] = params['perm'][:-1]
         permute = keras.layers.Permute(params['perm'][1:], name=keras_name)
         layers[node_name] = permute(layers[input_name])
 
@@ -173,7 +175,11 @@ def convert_reshape(node, params, layers, lambda_func, node_name, keras_name):
                 else:
                     layers[node_name] = input_0
 
-                reshape = keras.layers.Reshape(np.int32(input_1[1:]), name=keras_name)
+                if input_1.shape[0] == 5:
+                    logger.debug('Shrink the reshape target from %s to %s'%(np.int32(input_1[1:]), np.hstack([input_1[1:-2], np.int32(input_1[-2] * input_1[-1])])))
+                    reshape = keras.layers.Reshape(np.hstack([input_1[1:-2], np.int32(input_1[-2] * input_1[-1])]), name=keras_name)
+                else:
+                    reshape = keras.layers.Reshape(np.int32(input_1[1:]), name=keras_name)
                 layers[node_name] = reshape(layers[node_name])
 
             else:

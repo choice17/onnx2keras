@@ -145,7 +145,7 @@ def convert_global_avg_pool(node, params, layers, lambda_func, node_name, keras_
     logger = logging.getLogger('onnx2keras:global_avg_pool')
 
     input_0 = ensure_tf_type(layers[node.input[0]], layers[list(layers)[0]], name="%s_const" % keras_name)
-
+    #print(node.input[0], layers[node.input[0]], input_0)
     global_pool = keras.layers.GlobalAveragePooling2D(data_format='channels_first', name=keras_name)
     input_0 = global_pool(input_0)
 

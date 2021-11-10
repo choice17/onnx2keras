@@ -133,10 +133,10 @@ def convert_reduce_mean(node, params, layers, lambda_func, node_name, keras_name
         assert AttributeError('More than 1 input for reduce mean layer.')
 
     input_0 = ensure_tf_type(layers[node.input[0]], name="%s_const" % keras_name)
-
+    #print(">convert_reduce_mean", input_0, params, params['axes'], type(params['axes']))
     def target_layer(x, axis=params['axes'], keepdims=params['keepdims']):
         import tensorflow.keras.backend as K
-        return K.mean(x, keepdims=(keepdims == 1), axis=axis)
+        return K.mean(x, keepdims=(keepdims == 1), axis=np.array(axis,dtype=np.int32))
 
     lambda_layer = keras.layers.Lambda(target_layer, name=keras_name)
     layers[node_name] = lambda_layer(input_0)
